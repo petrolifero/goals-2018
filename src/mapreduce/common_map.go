@@ -2,8 +2,10 @@ package mapreduce
 
 import (
 	"hash/fnv"
+	"io/ioutil"
+	"os"
+	"encoding/json"
 )
-
 // doMap does the job of a map worker: it reads one of the input files
 // (inFile), calls the user-defined map function (mapF) for that file's
 // contents, and partitions the output into nReduce intermediate files.
@@ -14,6 +16,60 @@ func doMap(
 	nReduce int, // the number of reduce task that will be run ("R" in the paper)
 	mapF func(file string, contents string) []KeyValue,
 ) {
+	contents, err := ioutil.ReadFile(inFile)
+	if err != nil {
+		panic(err)
+	}
+	strContent := string(contents)
+	transformedContents := mapF(inFile,strContent)
+
+	numberOfMapWorks := len(transformedContents)
+	worksByWorker := numberOfMapWorks/nReduce
+	//reduce tasks that dont need to care about
+	//imperfect division
+	for i := 0 ; i<nReduce-1 ; i++ {
+		fileName := "f" + string(i)
+		f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
+		if openErr != nil {
+			panic(openErr)
+		}
+		initialIndex := i*worksByWorker
+		endIndex := initialIndex + worksByWorker
+		contentOfWorker := transformedContents[initialIndex:endIndex]
+		jsonWork,workError := json.Marshal(contentOfWorker)
+		if workError != nil {
+			panic(workError)
+		}
+		_, writeError := f.WriteString(string(jsonWork))
+		if writeError != nil {
+			panic(writeError)
+		}
+		openErr = f.Close()
+		if openErr != nil {
+			panic(openErr)
+		}
+	}
+	//finalWorker
+	fileName := "f" + string(nReduce-1)
+	f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
+	if openErr != nil {
+		panic(openErr)
+	}
+	initialIndex := (nReduce-1)*worksByWorker
+	endIndex := numberOfMapWorks
+	contentOfWorker := transformedContents[initialIndex:endIndex]
+	jsonWork,workError := json.Marshal(contentOfWorker)
+	if workError != nil {
+		panic(workError)
+	}
+	_, writeError := f.WriteString(string(jsonWork))
+	if writeError != nil {
+		panic(writeError)
+	}
+	openErr = f.Close()
+	if openErr != nil {
+		panic(openErr)
+	}	
 	// TODO:
 	// You will need to write this function.
 	// You can find the filename for this map task's input to reduce task number
