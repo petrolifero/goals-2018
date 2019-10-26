@@ -28,7 +28,7 @@ func doMap(
 	//reduce tasks that dont need to care about
 	//imperfect division
 	for i := 0 ; i<nReduce-1 ; i++ {
-		fileName := "f" + string(i)
+		fileName := "f" + string(mapTaskNumber) + "-" + string(i)
 		f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
 		if openErr != nil {
 			panic(openErr)
@@ -50,7 +50,7 @@ func doMap(
 		}
 	}
 	//finalWorker
-	fileName := "f" + string(nReduce-1)
+	fileName := "f" + string(mapTaskNumber) + "-" + string(nReduce-1)
 	f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
 	if openErr != nil {
 		panic(openErr)

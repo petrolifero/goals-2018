@@ -1,5 +1,12 @@
 package mapreduce
 
+import (
+	"io/ioutil"
+	"os"
+	"encoding/json"
+	"sort"
+)
+
 // doReduce does the job of a reduce worker: it reads the intermediate
 // key/value pairs (produced by the map phase) for this task, sorts the
 // intermediate key/value pairs by key, calls the user-defined reduce function
@@ -10,6 +17,32 @@ func doReduce(
 	nMap int, // the number of map tasks that were run ("M" in the paper)
 	reduceF func(key string, values []string) string,
 ) {
+	var resultKeyValue []KeyValue
+	for i:= 0; i<nMap; i++ {
+		fileName := reduceName(jobName,i,reduceTaskNumber)
+		contents,err := ioutil.ReadFile(fileName)
+		if err != nil {
+			panic(err)
+		}
+		contentsString := string(contents)
+		var jsonContent []KeyValue
+		err = json.Unmarshal(contentsString, &jsonContent)
+		if err != nil {
+			panic(err)
+		}
+		resultKeyValue += jsonContent
+	}
+	sort.Slice(resultKeyValue, func(i j int) bool {
+		return resultKeyValue[i].Key < resultKeyValue[j].Key
+	})
+
+	//MY TODO:
+	//Reduce the []KeyValue to [key,[value]]
+	//do it with a fold will be easy
+
+
+
+
 	// TODO:
 	// You will need to write this function.
 	// You can find the intermediate file for this reduce task from map task number
