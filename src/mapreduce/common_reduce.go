@@ -7,6 +7,11 @@ import (
 	"sort"
 )
 
+type keyListOfValues struct {
+	Key string
+	Values []string
+}
+
 // doReduce does the job of a reduce worker: it reads the intermediate
 // key/value pairs (produced by the map phase) for this task, sorts the
 // intermediate key/value pairs by key, calls the user-defined reduce function
@@ -36,11 +41,25 @@ func doReduce(
 		return resultKeyValue[i].Key < resultKeyValue[j].Key
 	})
 
-	//MY TODO:
-	//Reduce the []KeyValue to [key,[value]]
-	//do it with a fold will be easy
-
-
+	foldOfKeys := make([]keyListOfValues,0)
+	for k := 0; k <len(resultKeyValue); k++ {
+		key := resultKeyValue[k].Key
+		value := resultKeyValue[k].Value
+		if len(foldOfKeys) == 0 {
+			newValue := keyListOfValues{key,[1]string{value}}
+			foldOfKeys = append(foldOfKeys,newValue)
+		}
+		else {
+			lastElement := foldOfKeys[len(foldOfKeys) -1]
+			if key == lastElement.Key {
+				foldOfKeys[len(foldOfKeys)-1].Values = append(lastElement.Values, value)
+			}
+			else {
+				foldOfKeys = append(foldOfKeys, keyListOfValues{key,[1]string{value}})
+			}
+		}
+	}
+	//apply reducef and write on file(how to combine the output?)
 
 
 	// TODO:
