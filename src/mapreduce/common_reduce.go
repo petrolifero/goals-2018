@@ -2,7 +2,6 @@ package mapreduce
 
 import (
 	"io/ioutil"
-	"os"
 	"encoding/json"
 	"sort"
 )
@@ -31,13 +30,13 @@ func doReduce(
 		}
 		contentsString := string(contents)
 		var jsonContent []KeyValue
-		err = json.Unmarshal(contentsString, &jsonContent)
+		err = json.Unmarshal([]byte(contentsString), &jsonContent)
 		if err != nil {
 			panic(err)
 		}
-		resultKeyValue += jsonContent
+		resultKeyValue = append(resultKeyValue,jsonContent...)
 	}
-	sort.Slice(resultKeyValue, func(i j int) bool {
+	sort.Slice(resultKeyValue, func(i,j int) bool {
 		return resultKeyValue[i].Key < resultKeyValue[j].Key
 	})
 
@@ -46,21 +45,25 @@ func doReduce(
 		key := resultKeyValue[k].Key
 		value := resultKeyValue[k].Value
 		if len(foldOfKeys) == 0 {
-			newValue := keyListOfValues{key,[1]string{value}}
+			newValue := keyListOfValues{key,[]string{value}}
 			foldOfKeys = append(foldOfKeys,newValue)
-		}
-		else {
+		} else {
 			lastElement := foldOfKeys[len(foldOfKeys) -1]
 			if key == lastElement.Key {
 				foldOfKeys[len(foldOfKeys)-1].Values = append(lastElement.Values, value)
-			}
-			else {
-				foldOfKeys = append(foldOfKeys, keyListOfValues{key,[1]string{value}})
+			} else {
+				foldOfKeys = append(foldOfKeys, keyListOfValues{key,[]string{value}})
 			}
 		}
 	}
+	resultStrings := make([]string,0)
 	//apply reducef and write on file(how to combine the output?)
-
+	for index2 := 0; index2<len(foldOfKeys); index2++ {
+		ind := foldOfKeys[index2].Key
+		val := foldOfKeys[index2].Values
+		newString := reduceF(ind,val)
+		resultStrings=append(resultStrings,newString)
+	}
 
 	// TODO:
 	// You will need to write this function.
