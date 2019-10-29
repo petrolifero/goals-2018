@@ -64,7 +64,9 @@ func doReduce(
 		newString := reduceF(ind,val)
 		resultStrings=append(resultStrings,newString)
 	}
-
+	outputFile := mergeName(jobName, reduceTaskNumber);
+	enc := json.NewEncoder(outputFile)
+	for key in 
 	// TODO:
 	// You will need to write this function.
 	// You can find the intermediate file for this reduce task from map task number
