@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"sort"
+	"os"
+	"strconv"
 )
 
 type keyListOfValues struct {
@@ -23,7 +25,8 @@ func doReduce(
 ) {
 	var resultKeyValue []KeyValue
 	for i:= 0; i<nMap; i++ {
-		fileName := reduceName(jobName,i,reduceTaskNumber)
+		fileName := "f" + strconv.Itoa(i) + "-" + strconv.Itoa(reduceTaskNumber)
+//		fileName := reduceName(jobName,i,reduceTaskNumber)
 		contents,err := ioutil.ReadFile(fileName)
 		if err != nil {
 			panic(err)
@@ -56,17 +59,22 @@ func doReduce(
 			}
 		}
 	}
-	resultStrings := make([]string,0)
-	//apply reducef and write on file(how to combine the output?)
+	outputFile := mergeName(jobName, reduceTaskNumber);
+	outputHandler,ioErr := os.OpenFile(outputFile,os.O_RDWR|os.O_CREATE,0755)
+	if ioErr != nil {
+		panic(ioErr)
+	}
+	enc := json.NewEncoder(outputHandler)
 	for index2 := 0; index2<len(foldOfKeys); index2++ {
 		ind := foldOfKeys[index2].Key
 		val := foldOfKeys[index2].Values
 		newString := reduceF(ind,val)
-		resultStrings=append(resultStrings,newString)
+		enc.Encode(KeyValue{ind,newString})
 	}
-	outputFile := mergeName(jobName, reduceTaskNumber);
-	enc := json.NewEncoder(outputFile)
-	for key in 
+	ioErr = outputHandler.Close()
+	if ioErr != nil {
+		panic(ioErr)
+	}
 	// TODO:
 	// You will need to write this function.
 	// You can find the intermediate file for this reduce task from map task number

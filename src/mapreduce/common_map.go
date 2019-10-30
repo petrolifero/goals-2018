@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"encoding/json"
+	"strconv"
 )
 // doMap does the job of a map worker: it reads one of the input files
 // (inFile), calls the user-defined map function (mapF) for that file's
@@ -28,17 +29,20 @@ func doMap(
 	//reduce tasks that dont need to care about
 	//imperfect division
 	for i := 0 ; i<nReduce-1 ; i++ {
-		fileName := "f" + string(mapTaskNumber) + "-" + string(i)
-		f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
-		if openErr != nil {
-			panic(openErr)
-		}
+
 		initialIndex := i*worksByWorker
 		endIndex := initialIndex + worksByWorker
 		contentOfWorker := transformedContents[initialIndex:endIndex]
 		jsonWork,workError := json.Marshal(contentOfWorker)
 		if workError != nil {
 			panic(workError)
+		}
+
+		fileName := "f" + string(mapTaskNumber) + "-" + string(i)
+//		fileName := ihash(jsonWork)
+		f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
+		if openErr != nil {
+			panic(openErr)
 		}
 		_, writeError := f.WriteString(string(jsonWork))
 		if writeError != nil {
@@ -50,11 +54,6 @@ func doMap(
 		}
 	}
 	//finalWorker
-	fileName := "f" + string(mapTaskNumber) + "-" + string(nReduce-1)
-	f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
-	if openErr != nil {
-		panic(openErr)
-	}
 	initialIndex := (nReduce-1)*worksByWorker
 	endIndex := numberOfMapWorks
 	contentOfWorker := transformedContents[initialIndex:endIndex]
@@ -62,6 +61,13 @@ func doMap(
 	if workError != nil {
 		panic(workError)
 	}
+	fileName := "f" + strconv.Itoa(mapTaskNumber) + "-" + strconv.Itoa(nReduce-1)
+//	fileName := ihash(jsonWork)
+	f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
+	if openErr != nil {
+		panic(openErr)
+	}
+
 	_, writeError := f.WriteString(string(jsonWork))
 	if writeError != nil {
 		panic(writeError)
@@ -69,7 +75,7 @@ func doMap(
 	openErr = f.Close()
 	if openErr != nil {
 		panic(openErr)
-	}	
+	}
 	// TODO:
 	// You will need to write this function.
 	// You can find the filename for this map task's input to reduce task number
