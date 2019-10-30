@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"mapreduce"
 	"os"
+	"strings"
+	"strconv"
 )
 
 // The mapping function is called once for each piece of the input.
@@ -11,6 +13,12 @@ import (
 // and the value is the file's contents. The return value should be a slice of
 // key/value pairs, each represented by a mapreduce.KeyValue.
 func mapF(document string, value string) (res []mapreduce.KeyValue) {
+	result := make([]mapreduce.KeyValue,0)
+	words := strings.Fields(value)
+	for i:=0;i<len(words);i++ {
+		result=append(result,mapreduce.KeyValue{words[i],strconv.Itoa(1)})
+	}
+	return result
 	// TODO: you have to write this function
 }
 
@@ -18,6 +26,8 @@ func mapF(document string, value string) (res []mapreduce.KeyValue) {
 // list of that key's string value (merged across all inputs). The return value
 // should be a single output value for that key.
 func reduceF(key string, values []string) string {
+	count := len(values)
+	return strconv.Itoa(count)
 	// TODO: you also have to write this function
 }
 

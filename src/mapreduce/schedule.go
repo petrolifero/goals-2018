@@ -1,6 +1,20 @@
 package mapreduce
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
+
+const (
+	Idle = iota
+	InProgress
+	Completed
+)
+
+type TasksState struct {
+	State int
+	Worker Worker
+}
 
 // schedule starts and waits for all tasks in the given phase (Map or Reduce).
 func (mr *Master) schedule(phase jobPhase) {
@@ -14,7 +28,20 @@ func (mr *Master) schedule(phase jobPhase) {
 		ntasks = mr.nReduce
 		nios = len(mr.files)
 	}
-
+	var waitgroup sync.Waitgroup
+	tasksState := make(TasksState,ntasks)
+	for i:=0 ; i<ntasks; i++ {
+		tasksState[i].State=Idle
+	}
+	waitgroup.Add(ntasks)
+	for i:=0; i<ntasks; i++ {
+		go func() {
+			reply := 0
+			call("localhost","Worker.DoTask",,&reply)
+			waitgroup.Done()
+		}
+	}
+	waitgroup.Wait()
 	fmt.Printf("Schedule: %v %v tasks (%d I/Os)\n", ntasks, phase, nios)
 
 	// All ntasks tasks have to be scheduled on workers, and only once all of
