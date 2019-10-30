@@ -25,7 +25,7 @@ func doReduce(
 ) {
 	var resultKeyValue []KeyValue
 	for i:= 0; i<nMap; i++ {
-		fileName := "f" + strconv.Itoa(i) + "-" + strconv.Itoa(reduceTaskNumber)
+		fileName := jobName + strconv.Itoa(i) + "-" + strconv.Itoa(reduceTaskNumber)
 //		fileName := reduceName(jobName,i,reduceTaskNumber)
 		contents,err := ioutil.ReadFile(fileName)
 		if err != nil {

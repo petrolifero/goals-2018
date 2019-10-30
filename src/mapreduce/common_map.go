@@ -38,7 +38,7 @@ func doMap(
 			panic(workError)
 		}
 
-		fileName := "f" + string(mapTaskNumber) + "-" + string(i)
+		fileName := jobName + strconv.Itoa(mapTaskNumber) + "-" + strconv.Itoa(i)
 //		fileName := ihash(jsonWork)
 		f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
 		if openErr != nil {
@@ -61,7 +61,7 @@ func doMap(
 	if workError != nil {
 		panic(workError)
 	}
-	fileName := "f" + strconv.Itoa(mapTaskNumber) + "-" + strconv.Itoa(nReduce-1)
+	fileName := jobName + strconv.Itoa(mapTaskNumber) + "-" + strconv.Itoa(nReduce-1)
 //	fileName := ihash(jsonWork)
 	f, openErr := os.OpenFile(fileName, os.O_RDWR | os.O_CREATE, 0755)
 	if openErr != nil {
